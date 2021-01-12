@@ -1,4 +1,5 @@
 #include "PinNames.h"
+#include <Arduino_LSM9DS1.h>
 const unsigned int DELAY = 1000/6;
 
 
@@ -30,12 +31,25 @@ void setup() {
 
     digitalWrite(LED_BLUE, HIGH);
 
+     if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
+    while (1);
+  }
+
+  Serial.print("Accelerometer sample rate = ");
+  Serial.print(IMU.accelerationSampleRate());
+  Serial.println(" Hz");
+  Serial.println();
+  Serial.println("Acceleration in G's");
+  Serial.println("X\tY\tZ");
+
 }
 
 void loop() {
     recvWithStartEndMarkers();
     showNewData();
     blinkLED();
+    motionDetection();
 }
 
 void recvWithStartEndMarkers() {
@@ -72,8 +86,6 @@ void recvWithStartEndMarkers() {
 
 void showNewData() {
     if (newData == true) {
-        Serial.print("This just in ... ");
-        Serial.println(receivedChars);
         newData = false;
     
 
@@ -130,5 +142,22 @@ void blinkLED(){
 
 
     
+  }
+}
+
+
+void motionDetection(){
+
+        
+ float x, y, z;
+
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(x, y, z);
+
+   if(y < 0){
+    if(z <0){
+        Serial.print("flip");
+    }
+   }
   }
 }

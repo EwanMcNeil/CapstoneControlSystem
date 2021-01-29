@@ -1,15 +1,13 @@
 #include "PinNames.h"
-#include <Arduino_LSM9DS1.h>
+
+#include <Arduino_APDS9960.h>
 const unsigned int DELAY = 1000/6;
-
-
-
 const byte numChars = 32;
 char receivedChars[numChars];
 
 boolean newData = false;
 
-boolean blinking = false;
+boolean rotate = false;
 int currentLED = 0;
 
 
@@ -17,6 +15,8 @@ int currentLED = 0;
 
 void setup() {
     Serial.begin(9600);
+    while (!Serial);
+
     Serial.println("<Arduino is ready>");
 
     pinMode(LED_RED, OUTPUT);
@@ -31,25 +31,19 @@ void setup() {
 
     digitalWrite(LED_BLUE, HIGH);
 
-     if (!IMU.begin()) {
-    Serial.println("Failed to initialize IMU!");
-    while (1);
-  }
 
-  Serial.print("Accelerometer sample rate = ");
-  Serial.print(IMU.accelerationSampleRate());
-  Serial.println(" Hz");
-  Serial.println();
-  Serial.println("Acceleration in G's");
-  Serial.println("X\tY\tZ");
+
+  if (!APDS.begin()) {
+    Serial.println("Error initializing APDS9960 sensor!");
+  }
 
 }
 
 void loop() {
     recvWithStartEndMarkers();
-    showNewData();
-    blinkLED();
-    motionDetection();
+    processNewData();
+    acutate();
+    checkAlignment();
 }
 
 void recvWithStartEndMarkers() {
@@ -84,80 +78,52 @@ void recvWithStartEndMarkers() {
     }
 }
 
-void showNewData() {
+void processNewData() {
     if (newData == true) {
         newData = false;
     
 
-    if(strcmp(receivedChars, "red") == 0){
-      blinking = true;
+    if(strcmp(receivedChars, "ALIGNMENT_START") == 0){
+      rotate = true;
       currentLED = 1;
- 
     }
-    
-    if(strcmp(receivedChars, "green") == 0){
-      blinking = true;
-      currentLED = 2;
- 
-    }
-    
-    if(strcmp(receivedChars, "blue") == 0){
-      blinking = true;
-      currentLED = 3;
- 
-    }
-    
-    if(strcmp(receivedChars, "stop") == 0){
-      blinking = false;
- 
+
+    if(strcmp(receivedChars, "QR_ALIGNED") == 0){
+      rotate = false;
     }
  
     }
     
 }
 
-void blinkLED(){
-  if(blinking ==true){
-      switch (currentLED){
-        case 1:
-          digitalWrite(LED_RED, LOW);
-          delay(DELAY);
-          digitalWrite(LED_RED, HIGH);
-          delay(DELAY);
-          break;
-        case 2:
+
+//Acutate is called when it is time to turn the motor 
+//currently simulating the LED blinking
+void acutate(){
+  if(rotate ==true){
+   
           digitalWrite(LED_GREEN, LOW);
           delay(DELAY);
           digitalWrite(LED_GREEN, HIGH);
           delay(DELAY);
-          break;
-        case 3:
-          digitalWrite(LED_BLUE, LOW);
-          delay(DELAY);
-          digitalWrite(LED_BLUE, HIGH);
-          delay(DELAY);
-          break;
+ 
         
-      }
-
-
-    
   }
 }
 
 
-void motionDetection(){
+void checkAlignment(){
+if (APDS.proximityAvailable()) {
 
-        
- float x, y, z;
-
-  if (IMU.accelerationAvailable()) {
-    IMU.readAcceleration(x, y, z);
-
-   if(y < 0){
-    if(z <0){
-        Serial.print("flip");
+  if(rotate){
+    int proximity = APDS.readProximity();
+  
+    if (proximity < 200){
+      rotate = false;
+      Serial.print("<ALIGNMENT_FINISHED>\n");
     }
-   }
   }
+  }
+  delay(100);  
+
 }

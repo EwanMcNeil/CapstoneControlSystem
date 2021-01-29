@@ -35,7 +35,6 @@ class WebcamStream:
         while True:
             if self.stopped:
                 return
-                
             self.ret,self.img = self.stream.read()
             
     def read(self):
@@ -45,26 +44,6 @@ class WebcamStream:
         print('releasing the camera')
         self.stream.stream.release()
         self.stopped = True
-
-    #simplifed to just this for the moment to get the general alighment
-    # Probabally need to revert to the larger version in order to get 
-    # proper alignment        
-    #######################################
-    def decode(self, im):
-        decodedObjects = pyzbar.decode(im)
-        count = 0
-        for obj in decodedObjects:
-    #        print('Type : ',obj.type)
-    #        print('Data : ', obj.data,'\n')
-            count +=1
-        if count != 0:
-            print('Qr code found : ', count)
-            return True
-        else:
-            return False
-    #######################################
-
-
     
     def __del__(self):
         print('releasing the camera')
@@ -72,4 +51,5 @@ class WebcamStream:
         
         
 
+        
 

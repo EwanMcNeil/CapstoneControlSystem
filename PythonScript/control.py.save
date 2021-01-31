@@ -2,7 +2,6 @@ from __future__ import print_function
 import serial
 import threading
 import pyzbar.pyzbar as pyzbar
-import cv2
 import time 
 import pyzbar.pyzbar as pyzbar
 import numpy as np

@@ -19,27 +19,7 @@ selected_device = []
 
 message = " ";
 messageFlag = False;
-messagesem = threading.Semaphore()
-class DataToFile:
-
-    column_names = ["time", "delay", "data_value"]
-
-    def __init__(self, write_path):
-        self.path = write_path
-
-    def write_to_csv(self, times: [int], delays: [datetime], data_values: [Any]):
-
-        if len(set([len(times), len(delays), len(data_values)])) > 1:
-            raise Exception("Not all data lists are the same length.")
-
-        with open(self.path, "a+") as f:
-            if os.stat(self.path).st_size == 0:
-                print("Created file.")
-                f.write(",".join([str(name) for name in self.column_names]) + ",\n")
-            else:
-                for i in range(len(data_values)):
-                    f.write(f"{times[i]},{delays[i]},{data_values[i]},\n")
-
+messageSem = threading.Semaphore()
 
 class Connection:
     
@@ -50,16 +30,12 @@ class Connection:
         loop: asyncio.AbstractEventLoop,
         read_characteristic: str,
         write_characteristic: str,
-        data_dump_handler: Callable[[str, Any], None],
-        data_dump_size: int = 256,
     ):
         self.loop = loop
         self.read_characteristic = read_characteristic
         self.write_characteristic = write_characteristic
-        self.data_dump_handler = data_dump_handler
 
         self.last_packet_time = datetime.now()
-        self.dump_size = data_dump_size
         self.connected = False
         self.connected_device = None
 
@@ -154,22 +130,24 @@ class Connection:
     def notification_handler(self, sender: str, data: Any):
         self.rx_data.append(int.from_bytes(data, byteorder="big"))
         self.record_time_info()
+        global message
+        global messageSem
         print("notifed")
         print(int.from_bytes(data, byteorder="big"))
         droneMessage = int.from_bytes(data, byteorder="big")
 
-	#zero indicates drone has started connection
+	    #zero indicates drone has started connection
  
         if(droneMessage == 0):
             print("recieved 0")
             message = "LAND_DRONE"
-            self.responder(message)
+            
 
-	#one indicates the drone has landed 	
+	    #one indicates the drone has landed 	
         if(droneMessage == 1):
             print("recieved 1")
             message = "TAKEOFF_DRONE"
-            self.responder(message)        
+                  
 
  
 
@@ -177,17 +155,15 @@ class Connection:
 # Loops
 #############
 async def user_console_manager(connection: Connection):
-    global message;
-    global messageFlag;
+    global message
+    global messageFlag
+    global messageSem
     while True:
         if connection.client and connection.connected:
-              messagesem.acquire()
-              if(messageFlag):
-                  bytes_to_send = bytearray(map(ord, message))
-                  await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
-                  messageFlag = False;
-                  messagesem.release()
-                  sleep(1)
+            messageSem.acquire()
+            bytes_to_send = bytearray(map(ord, message))
+            await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+            messageSem.release()
         else:
             await asyncio.sleep(2.0, loop=loop)
 
@@ -209,9 +185,8 @@ if __name__ == "__main__":
     # Create the event loop.
     loop = asyncio.get_event_loop()
 
-    data_to_file = DataToFile(output_file)
     connection = Connection(
-        loop, read_characteristic, write_characteristic, data_to_file.write_to_csv
+        loop, read_characteristic, write_characteristic
     )
     try:
         asyncio.ensure_future(connection.manager())

@@ -5,6 +5,8 @@
 #include <ArduinoBLE.h>
 #include <PDM.h>
 
+#include <Arduino_LSM9DS1.h>
+
 // This device's MAC:
 // C8:5C:A2:2B:61:86
 //#define LEDR        (23u)
@@ -12,10 +14,23 @@
 //#define LEDB        (24u)
 
 // Device name
-const char* nameOfPeripheral = "MicrophoneMonitor";
+const char* nameOfPeripheral = "Drone_1";
 const char* uuidOfService = "00001101-0000-1000-8000-00805f9b34fb";
 const char* uuidOfRxChar = "00001142-0000-1000-8000-00805f9b34fb";
 const char* uuidOfTxChar = "00001143-0000-1000-8000-00805f9b34fb";
+
+
+
+
+//enum for communication stages
+//takeoff needs to be handled differntly because the power will shut off the drone
+enum currentStage {
+  startup,
+  acceptedQueue,
+  allowedLanding,
+  landed,
+  takeoff
+} CURRENTSTAGE = startup;
 
 // BLE Service
 BLEService microphoneService(uuidOfService);
@@ -44,6 +59,12 @@ void setup() {
 
   // Ensure serial port is ready.
   while (!Serial);
+
+    if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
+    while (1);
+  }
+
 
   // Prepare LED pins.
   pinMode(LED_BUILTIN, OUTPUT);
@@ -94,27 +115,70 @@ void setup() {
 }
 
 
+//protocall for the drone communication
+//1. JOIN_QUEUE_DRONE#_DOCK#
+
+//JOIN_QUEUE_DRONE#_DOCK#
+//ACCEPTED_QUEUE_DRONE#_DOCK#
+//LAND_DRONE#_DOCK#
+//LANDED_DRONE#_DOCK#
+//TAKEOFF_DRONE#_DOCK#
+
 void loop()
 {
   BLEDevice central = BLE.central();
   
   if (central)
   {
+
+    String Message;
     // Only send data if we are connected to a central device.
     while (central.connected()) {
       connectedLight();
 
-      // Send the microphone values to the central device.
-      if (samplesRead) {
-        // print samples to the serial monitor or plotter
-        for (int i = 0; i < samplesRead; i++) {
-          txChar.writeValue(sampleBuffer[i]);      
-        }
-        // Clear the read count
-        samplesRead = 0;
-      }
+       switch (CURRENTSTAGE){
+          case startup:
+            txChar.writeValue(0);
+            delay(5000); 
+            break;
+          case acceptedQueue:
+            break;
+          case allowedLanding:
+           /// Message = "LANDED_DRONE";
+          delay(1000);
+          
+          while(true){
+         float x, y, z;
+
+              if (IMU.accelerationAvailable()) {
+                IMU.readAcceleration(x, y, z);
+            
+                Serial.print(x);
+                Serial.print('\t');
+                Serial.print(y);
+                Serial.print('\t');
+                Serial.println(z);
+              }
+           if(x == 0.0 && y == 0.0 && z == 0.0){
+                break;
+               }
+          }
+            //once landing occurs we confim landed on platform before going to landed stage
+             txChar.writeValue(1); 
+             CURRENTSTAGE = landed;
+             Serial.println("drone is now in landed stage");
+            break;
+          case landed:
+            break;
+          case takeoff:
+            break;
+       }
+
+       }
+        
+     
     }
-  } else {
+  else {
     disconnectedLight();
   }
 }
@@ -137,9 +201,21 @@ void onRxCharValueUpdate(BLEDevice central, BLECharacteristic characteristic) {
   byte test[256];
   int dataLength = rxChar.readValue(test, 256);
 
-  for(int i = 0; i < dataLength; i++) {
-    Serial.print((char)test[i]);
+  String messageRecieved = String((char *)test);
+  Serial.println(messageRecieved);
+    if(messageRecieved.equals("ACCEPTED_QUEUE")){
+     CURRENTSTAGE = acceptedQueue;
+     Serial.println("accepted in queue waiting to land");
   }
+  if(messageRecieved.equals("LAND_DRONE")){
+     CURRENTSTAGE = acceptedQueue;
+     Serial.println("allowed to land drone");
+  }
+  if(messageRecieved.equals("TAKEOFF_DRONE")){
+     CURRENTSTAGE = acceptedQueue;
+     Serial.println("cleared for takeoff");
+  }
+  
   Serial.println();
   Serial.print("Value length = ");
   Serial.println(rxChar.valueLength());

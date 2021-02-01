@@ -4,6 +4,7 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 import os
 import asyncio
 import platform
+import threading
 from datetime import datetime
 from typing import Callable, Any
 
@@ -16,6 +17,9 @@ output_file = f"/home/pi/Desktopmicrophone_dump.csv"
 
 selected_device = []
 
+message = " ";
+messageFlag = False;
+messagesem = threading.Semaphore()
 class DataToFile:
 
     column_names = ["time", "delay", "data_value"]
@@ -129,6 +133,13 @@ class Connection:
         self.connected_device = devices[response]
         self.client = BleakClient(devices[response].address, loop=self.loop)
 
+    def responder(self,message):
+            if connection.client and connection.connected:
+                bytes_to_send = bytearray(map(ord, message))
+                connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+            
+                
+
     def record_time_info(self):
         present_time = datetime.now()
         self.rx_timestamps.append(present_time)
@@ -143,21 +154,40 @@ class Connection:
     def notification_handler(self, sender: str, data: Any):
         self.rx_data.append(int.from_bytes(data, byteorder="big"))
         self.record_time_info()
-        if len(self.rx_data) >= self.dump_size:
-            self.data_dump_handler(self.rx_data, self.rx_timestamps, self.rx_delays)
-            self.clear_lists()
+        print("notifed")
+        print(int.from_bytes(data, byteorder="big"))
+        droneMessage = int.from_bytes(data, byteorder="big")
 
+	#zero indicates drone has started connection
+ 
+        if(droneMessage == 0):
+            print("recieved 0")
+            message = "LAND_DRONE"
+            self.responder(message)
+
+	#one indicates the drone has landed 	
+        if(droneMessage == 1):
+            print("recieved 1")
+            message = "TAKEOFF_DRONE"
+            self.responder(message)        
+
+ 
 
 #############
 # Loops
 #############
 async def user_console_manager(connection: Connection):
+    global message;
+    global messageFlag;
     while True:
         if connection.client and connection.connected:
-            input_str = await ainput("Enter string: ")
-            bytes_to_send = bytearray(map(ord, input_str))
-            await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
-            print(f"Sent: {input_str}")
+              messagesem.acquire()
+              if(messageFlag):
+                  bytes_to_send = bytearray(map(ord, message))
+                  await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+                  messageFlag = False;
+                  messagesem.release()
+                  sleep(1)
         else:
             await asyncio.sleep(2.0, loop=loop)
 
@@ -185,7 +215,7 @@ if __name__ == "__main__":
     )
     try:
         asyncio.ensure_future(connection.manager())
-        asyncio.ensure_future(user_console_manager(connection))
+        #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main())
         loop.run_forever()
     except KeyboardInterrupt:

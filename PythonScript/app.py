@@ -13,14 +13,12 @@ from bleak import BleakClient, discover
 
 
 root_path = os.environ["HOME"]
-output_file = f"/home/pi/Desktopmicrophone_dump.csv"
 
 selected_device = []
 
-message = " ";
-messageFlag = False;
-messageSem = threading.Semaphore()
-
+startup = False
+message = " "
+messageFlag = False
 class Connection:
     
     client: BleakClient = None
@@ -109,12 +107,6 @@ class Connection:
         self.connected_device = devices[response]
         self.client = BleakClient(devices[response].address, loop=self.loop)
 
-    def responder(self,message):
-            if connection.client and connection.connected:
-                bytes_to_send = bytearray(map(ord, message))
-                connection.client.write_gatt_char(write_characteristic, bytes_to_send)
-            
-                
 
     def record_time_info(self):
         present_time = datetime.now()
@@ -126,27 +118,32 @@ class Connection:
         self.rx_data.clear()
         self.rx_delays.clear()
         self.rx_timestamps.clear()
+        
+        
 
     def notification_handler(self, sender: str, data: Any):
         self.rx_data.append(int.from_bytes(data, byteorder="big"))
         self.record_time_info()
-        global message
-        global messageSem
         print("notifed")
         print(int.from_bytes(data, byteorder="big"))
         droneMessage = int.from_bytes(data, byteorder="big")
 
 	    #zero indicates drone has started connection
- 
+        global message
+        global messageFlag
         if(droneMessage == 0):
             print("recieved 0")
             message = "LAND_DRONE"
-            
+            messageFlag = True
+
+           
 
 	    #one indicates the drone has landed 	
         if(droneMessage == 1):
             print("recieved 1")
             message = "TAKEOFF_DRONE"
+            messageFlag = True
+           
                   
 
  
@@ -154,25 +151,63 @@ class Connection:
 #############
 # Loops
 #############
+async def writing_handler(connection: Connection,message):
+    print("writing handler")
+    bytes_to_send = bytearray(map(ord, message))
+    await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+
 async def user_console_manager(connection: Connection):
     global message
     global messageFlag
     global messageSem
+    global startup
     while True:
         if connection.client and connection.connected:
-            messageSem.acquire()
-            bytes_to_send = bytearray(map(ord, message))
-            await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
-            messageSem.release()
+            print(1)
+            if(startup):
+               if(messageFlag):
+                    print(2)
+               
+                    print("SENDING: ")
+                    print(message)
+                
+                    bytes_to_send = bytearray(map(ord, message))
+                    await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+               else:
+                  print("on await")
+                  await asyncio.sleep(2.0, loop=loop)
+
+            else:
+                print(3)
+                firstmessage = "CONNECTED"
+                bytes_to_send = bytearray(map(ord, firstmessage))
+                await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+                startup = True
         else:
             await asyncio.sleep(2.0, loop=loop)
 
 
-async def main():
+async def main(connection: Connection):
+    global startup
+    global message
+    global messageFlag
     while True:
+        if connection.client and connection.connected:
         # YOUR APP CODE WOULD GO HERE.
-        await asyncio.sleep(5)
-
+            if(startup):
+              if(messageFlag):
+                    print("writing handler")
+                    bytes_to_send = bytearray(map(ord, message))
+                    await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+                    messageFlag = False
+              await asyncio.sleep(5)
+            else:
+              firstmessage = "CONNECTED"
+              bytes_to_send = bytearray(map(ord, firstmessage))
+              await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+              startup = True
+        else:
+         await asyncio.sleep(2.0, loop=loop)
 
 #############
 # App Main
@@ -191,7 +226,7 @@ if __name__ == "__main__":
     try:
         asyncio.ensure_future(connection.manager())
         #asyncio.ensure_future(user_console_manager(connection))
-        asyncio.ensure_future(main())
+        asyncio.ensure_future(main(connection))
         loop.run_forever()
     except KeyboardInterrupt:
         print()

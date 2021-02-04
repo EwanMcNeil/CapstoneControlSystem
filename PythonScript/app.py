@@ -11,7 +11,7 @@ from typing import Callable, Any
 from aioconsole import ainput
 from bleak import BleakClient, discover
 
-
+#editing from vi
 root_path = os.environ["HOME"]
 
 selected_device = []
@@ -84,25 +84,24 @@ class Connection:
     async def select_device(self):
         print("Bluetooh LE hardware warming up...")
         await asyncio.sleep(2.0, loop=loop) # Wait for BLE to initialize.
+
+
+
+
+
         devices = await discover()
+        response = -1;
 
-        print("Please select device: ")
-        for i, device in enumerate(devices):
-            print(f"{i}: {device.name}")
-
-        response = -1
-        while True:
-            response = await ainput("Select device: ")
-            try:
-                response = int(response.strip())
-            except:
-                print("Please make valid selection.")
-            
-            if response > -1 and response < len(devices):
-                break
-            else:
-                print("Please make valid selection.")
-
+        while(response == -1):
+                print("Searching for drone: ")
+                for i, device in enumerate(devices):
+                    if(device.name == "Drone_1"):
+                     response = i
+             
+                if(response == -1):
+                   await asyncio.sleep(5,loop = loop)
+                   devices = await discover()
+                
         print(f"Connecting to {devices[response].name}")
         self.connected_device = devices[response]
         self.client = BleakClient(devices[response].address, loop=self.loop)

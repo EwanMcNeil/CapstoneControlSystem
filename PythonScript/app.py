@@ -41,9 +41,13 @@ class Connection:
         self.rx_timestamps = []
         self.rx_delays = []
 
-    def on_disconnect(self, client: BleakClient, future: asyncio.Future):
+    async def on_disconnect(self, client: BleakClient):
+        #removingfuture:asyncio.Future because it is not being used
+
         self.connected = False
         # Put code here to handle what happens on disconnet.
+        #on disconnected we start searching again
+        self.select_device()
         print(f"Disconnected from {self.connected_device.name}!")
 
     async def cleanup(self):

@@ -7,6 +7,9 @@ import platform
 import threading
 from datetime import datetime
 from typing import Callable, Any
+import serial
+import time 
+
 
 from aioconsole import ainput
 from bleak import BleakClient, discover
@@ -141,11 +144,15 @@ class Connection:
 
            
 
-	    #one indicates the drone has landed 	
+	    #one indicates the drone has landed 
+        # After which we check for alignment 
+        # once achieved send message to turn off lights 	
         if(droneMessage == 1):
             print("recieved 1")
-            message = "TAKEOFF_DRONE"
-            messageFlag = True
+            check = waitAlign()
+            if(check == 1):
+                message = "ALIGNED_DRONE"
+                messageFlag = True
            
                   
 
@@ -154,6 +161,38 @@ class Connection:
 #############
 # Loops
 #############
+
+# #Setting up the usb serial connections to the microcontrollers
+rotation = serial.Serial('/dev/tty.usbmodemFA131', 9600, timeout = 1)
+rotation.flush()
+
+# locking = serial.Serial('/dev/ttyACM1', 9600, timeout = 1)
+# locking.flush()
+
+# arm = serial.Serial('/dev/ttyACM2', 9600, timeout = 1)
+# arm.flush()
+
+#this will tell all the microcontrollers at different stages what to do
+
+
+def waitAlign():
+    #telling microcontroller to start alignment checking 
+    rotation.write(b"<ALIGNMENT_START>")
+    aligned = False
+
+    #waiting for postive aligment to procede to next step
+    while not aligned:
+        line = rotation.readline().decode('utf-8').rstrip()
+        print(line)
+        if line ==  "<ALIGNMENT_FINISHED>":
+            aligned = True
+
+    return 1;
+
+
+
+
+
 async def writing_handler(connection: Connection,message):
     print("writing handler")
     bytes_to_send = bytearray(map(ord, message))
@@ -176,6 +215,7 @@ async def user_console_manager(connection: Connection):
                 
                     bytes_to_send = bytearray(map(ord, message))
                     await connection.client.write_gatt_char(write_characteristic, bytes_to_send)
+                    messageFlag = False
                else:
                   print("on await")
                   await asyncio.sleep(2.0, loop=loop)

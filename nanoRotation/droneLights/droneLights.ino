@@ -20,7 +20,7 @@ const char* uuidOfRxChar = "00001142-0000-1000-8000-00805f9b34fb";
 const char* uuidOfTxChar = "00001143-0000-1000-8000-00805f9b34fb";
 
 
-
+int LED = 2;
 
 //enum for communication stages
 //takeoff needs to be handled differntly because the power will shut off the drone
@@ -31,6 +31,9 @@ enum currentStage {
   landed,
   takeoff
 } CURRENTSTAGE = startup;
+
+bool CONNECTEDPI = false;
+int sentMessage = 0;
 
 // BLE Service
 BLEService microphoneService(uuidOfService);
@@ -58,12 +61,12 @@ void setup() {
   Serial.begin(9600);
 
   // Ensure serial port is ready.
-  while (!Serial);
+  //while (!Serial);
 
-    if (!IMU.begin()) {
+   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     while (1);
-  }
+   }
 
 
   // Prepare LED pins.
@@ -136,44 +139,101 @@ void loop()
     while (central.connected()) {
       connectedLight();
 
+      if(CONNECTEDPI){
        switch (CURRENTSTAGE){
           case startup:
-            txChar.writeValue(0);
-            delay(5000); 
+
+            if(sentMessage == 0){
+              Serial.println("sending");
+              txChar.writeValue(0);
+            }
             break;
           case acceptedQueue:
             break;
           case allowedLanding:
            /// Message = "LANDED_DRONE";
-          delay(1000);
-          
-          while(true){
-         float x, y, z;
+               delay(1000);
+                float prevX;
+                float prevY;
+                float prevZ;
+                int currentAddition;
+                bool notLanded;
+                notLanded = true;
+                while(notLanded){
+                float x, y, z;
+               
+               
+      
+                    if (IMU.accelerationAvailable()) {
+                      IMU.readAcceleration(x, y, z);
+                     
+                 
+                      Serial.println(" ");
+                     static unsigned long startTime = millis();
 
-              if (IMU.accelerationAvailable()) {
-                IMU.readAcceleration(x, y, z);
-            
-                Serial.print(x);
-                Serial.print('\t');
-                Serial.print(y);
-                Serial.print('\t');
-                Serial.println(z);
-              }
-           if(x == 0.0 && y == 0.0 && z == 0.0){
-                break;
-               }
-          }
+                       currentAddition = 0;
+                       float bound = 0.1;
+                      if(x > prevX - bound && x < prevX + bound){
+                           Serial.println("X is stable");
+                      }
+                      else
+                      {
+                        currentAddition += 1;
+                      }
+                      if(y > prevY - bound && y < prevY + bound){
+                           Serial.println("Y is stable");
+                      }
+                      else
+                      {
+                        currentAddition += 1;
+                      }
+                       if(z > prevZ - bound && z < prevZ + bound){
+                           Serial.println("Z is stable");
+                      }
+                      else
+                      {
+                        currentAddition += 1;
+                      }
+                      prevX = x;
+                      prevY = y;
+                      prevZ = z;
+                      
+                      Serial.println(currentAddition);
+                      if (currentAddition >= 1){
+                          startTime = millis();
+                      }
+                      if (millis() - startTime >= 1000)
+                      {
+                     notLanded = false;
+                     digitalWrite(LED, HIGH);
+                     txChar.writeValue(1); 
+                     CURRENTSTAGE = landed;
+                     Serial.println("drone is now in landed stage");
+                     return;
+                      }
+                    
+                     }
+      
+                    }
+               
+                
             //once landing occurs we confim landed on platform before going to landed stage
-             txChar.writeValue(1); 
-             CURRENTSTAGE = landed;
-             Serial.println("drone is now in landed stage");
+            
             break;
           case landed:
             break;
           case takeoff:
             break;
+       
+       }}
+       sentMessage = sentMessage + 1;
+       if(sentMessage >1000000){
+        sentMessage = 0;
        }
-
+       else{
+     
+       }
+       
        }
         
      
@@ -195,26 +255,44 @@ void startBLE() {
   }
 }
 
+
 void onRxCharValueUpdate(BLEDevice central, BLECharacteristic characteristic) {
   // central wrote new value to characteristic, update LED
   Serial.print("Characteristic event, read: ");
   byte test[256];
   int dataLength = rxChar.readValue(test, 256);
 
-  String messageRecieved = String((char *)test);
+  String messageRecieved = "";
+  for(int i = 0; i < dataLength; i++) {
+    messageRecieved += (char)test[i];
+  }
+
+  
   Serial.println(messageRecieved);
     if(messageRecieved.equals("ACCEPTED_QUEUE")){
      CURRENTSTAGE = acceptedQueue;
      Serial.println("accepted in queue waiting to land");
   }
   if(messageRecieved.equals("LAND_DRONE")){
-     CURRENTSTAGE = acceptedQueue;
+     CURRENTSTAGE = allowedLanding;
      Serial.println("allowed to land drone");
   }
   if(messageRecieved.equals("TAKEOFF_DRONE")){
-     CURRENTSTAGE = acceptedQueue;
+     CURRENTSTAGE = takeoff;
      Serial.println("cleared for takeoff");
   }
+   if(messageRecieved.equals("CONNECTED")){
+     CURRENTSTAGE = startup;
+     CONNECTEDPI = true;
+     Serial.println("connected");
+  }
+  if(messageRecieved.equals("ALIGNED_DRONE")){
+     digitalWrite(LED, LOW);
+     Serial.println("Drone is aligned turning off light");
+  }
+
+
+
   
   Serial.println();
   Serial.print("Value length = ");

@@ -1,6 +1,3 @@
-// https://rootsaid.com/arduino-ble-example/
-// Characteristic info.
-// https://www.arduino.cc/en/Reference/ArduinoBLEBLECharacteristicBLECharacteristic
 
 #include <ArduinoBLE.h>
 #include <PDM.h>

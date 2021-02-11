@@ -24,6 +24,7 @@ if not btlib:
 bluez = CDLL(btlib, use_errno=True)
 
 dev_id = bluez.hci_get_route(None)
+print(dev_id)
 
 sock = socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI)
 sock.bind((dev_id,))
@@ -55,6 +56,7 @@ if err < 0:
         os.strerror(errnum)
     ))
 
+print("before loop")
 while True:
     data = sock.recv(1024)
     # print bluetooth address from LE Advert. packet

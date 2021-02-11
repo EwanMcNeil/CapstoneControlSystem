@@ -163,7 +163,7 @@ class Connection:
 #############
 
 # #Setting up the usb serial connections to the microcontrollers
-rotation = serial.Serial('/dev/tty.usbmodemFA131', 9600, timeout = 1)
+rotation = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
 rotation.flush()
 
 # locking = serial.Serial('/dev/ttyACM1', 9600, timeout = 1)

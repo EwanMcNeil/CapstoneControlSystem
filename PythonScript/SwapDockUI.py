@@ -127,3 +127,5 @@ class Ui_MainWindow(object):
         self.action_Run_Alignment.setText(_translate("MainWindow", "&Run Alignment"))
         self.action_Run_Arm.setText(_translate("MainWindow", "&Run Arm"))
 
+
+

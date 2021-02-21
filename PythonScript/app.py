@@ -33,6 +33,8 @@ message = " "
 messageFlag = False
 uiCreation = False
 
+uiThread = threading.Thread(target =UI_thread)
+
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -145,6 +147,7 @@ class Connection:
 
         devices = await discover()
         response = -1;
+        uiThread.
 
         while(response == -1):
                 print("Searching for drone: ")
@@ -307,11 +310,13 @@ exec
 
 def UI_thread():
     global uiCreation
+    global win
     if(not uiCreation):
         print("STARTED UI")
         uiCreation = True
         app = QApplication(sys.argv)
         win = Window()
+        win.droneSearchText.setStyleSheet("background-color:yellow")
         win.show()
         app.exec()
         #sys.exit(app.exec())
@@ -322,7 +327,7 @@ def UI_thread():
 
 if __name__ == "__main__":
    
-    uiThread = threading.Thread(target =UI_thread)
+    
     uiThread.start()
     # Create the event loop.
     loop = asyncio.get_event_loop()

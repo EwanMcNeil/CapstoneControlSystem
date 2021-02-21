@@ -323,6 +323,7 @@ if __name__ == "__main__":
     )
     try:
         asyncio.ensure_future(connection.manager())
+        asyncio.ensure_future(UI_thread())
         #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main(connection))
         loop.run_forever()

@@ -328,6 +328,7 @@ if __name__ == "__main__":
 
    # UITask = asyncio.create_task(UI_thread())
     asyncio.to_thread(UI_thread())
+  
 
     connection = Connection(
         loop, read_characteristic, write_characteristic

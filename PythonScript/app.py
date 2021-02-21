@@ -310,10 +310,10 @@ write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
 def UI_thread():
-    global uiCreation
-    global win
     if(not uiCreation):
         print("STARTED UI")
+        app = QApplication(sys.argv)
+        win = Window()
         uiCreation = True
         win.droneSearchText.setStyleSheet("background-color:yellow")
         win.show()
@@ -326,8 +326,7 @@ def UI_thread():
 
 
 uiThread = threading.Thread(target =UI_thread)
-app = QApplication(sys.argv)
-win = Window()
+
 
 
 if __name__ == "__main__":

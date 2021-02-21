@@ -147,8 +147,7 @@ class Connection:
 
         devices = await discover()
         response = -1;
-        uiThread.
-
+        
         while(response == -1):
                 print("Searching for drone: ")
                 for i, device in enumerate(devices):

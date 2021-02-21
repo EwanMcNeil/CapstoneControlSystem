@@ -35,7 +35,7 @@ message = " "
 messageFlag = False
 uiCreation = False
 
-
+globalStage = 0;
 
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -52,6 +52,13 @@ class Window(QMainWindow, Ui_MainWindow):
     def findAndReplace(self):
         dialog = FindReplaceDialog(self)
         dialog.exec()
+
+    def updateGUIloop(self):
+        global globalStage
+        while(true):
+            if(globalStage == 1):
+                self.droneSearchText.setStyleSheet("background-color:yellow")
+
 
 
     def about(self):
@@ -151,8 +158,8 @@ class Connection:
 
         devices = await discover()
         response = -1
-        localWindow = Window()
-        localWindow.droneSearchText.setStyleSheet("background-color:yellow")
+        global globalStage
+        globalStage = 1
         while(response == -1):
                 print("Searching for drone: ")
                 for i, device in enumerate(devices):

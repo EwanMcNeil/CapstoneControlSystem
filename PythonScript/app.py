@@ -23,17 +23,6 @@ from SwapDockUI import Ui_MainWindow
 from aioconsole import ainput
 from bleak import BleakClient, discover
 
-#editing from vi
-root_path = os.environ["HOME"]
-
-selected_device = []
-
-startup = False
-message = " "
-messageFlag = False
-uiCreation = False
-
-uiThread = threading.Thread(target =UI_thread)
 
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -146,8 +135,7 @@ class Connection:
 
 
         devices = await discover()
-        response = -1;
-        
+        response = -1
         while(response == -1):
                 print("Searching for drone: ")
                 for i, device in enumerate(devices):
@@ -348,4 +336,17 @@ if __name__ == "__main__":
     finally:
         print("Disconnecting...")
         loop.run_until_complete(connection.cleanup())
-    
+
+
+
+#editing from vi
+root_path = os.environ["HOME"]
+
+selected_device = []
+
+startup = False
+message = " "
+messageFlag = False
+uiCreation = False
+
+uiThread = threading.Thread(target =UI_thread)

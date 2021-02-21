@@ -24,6 +24,19 @@ from aioconsole import ainput
 from bleak import BleakClient, discover
 
 
+
+#editing from vi
+root_path = os.environ["HOME"]
+
+selected_device = []
+
+startup = False
+message = " "
+messageFlag = False
+uiCreation = False
+
+
+
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -58,6 +71,10 @@ class FindReplaceDialog(QDialog):
         loadUi("ui/find_replace.ui", self)
 
 
+
+uiThread = threading.Thread(target =UI_thread)
+app = QApplication(sys.argv)
+win = Window()
 
 
 class Connection:
@@ -186,7 +203,7 @@ class Connection:
         # once achieved send message to turn off lights 	
         if(droneMessage == 1):
             print("recieved 1")
-            check = waitAlign()
+            #check = waitAlign()
             if(check == 1):
                 message = "ALIGNED_DRONE"
                 messageFlag = True
@@ -200,8 +217,8 @@ class Connection:
 #############
 
 # #Setting up the usb serial connections to the microcontrollers
-rotation = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
-rotation.flush()
+#rotation = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+#rotation.flush()
 
 # locking = serial.Serial('/dev/ttyACM1', 9600, timeout = 1)
 # locking.flush()
@@ -212,19 +229,19 @@ rotation.flush()
 #this will tell all the microcontrollers at different stages what to do
 
 
-def waitAlign():
-    #telling microcontroller to start alignment checking 
-    rotation.write(b"<ALIGNMENT_START>")
-    aligned = False
+# def waitAlign():
+#     #telling microcontroller to start alignment checking 
+#     rotation.write(b"<ALIGNMENT_START>")
+#     aligned = False
 
-    #waiting for postive aligment to procede to next step
-    while not aligned:
-        line = rotation.readline().decode('utf-8').rstrip()
-        print(line)
-        if line ==  "<ALIGNMENT_FINISHED>":
-            aligned = True
+#     #waiting for postive aligment to procede to next step
+#     while not aligned:
+#         line = rotation.readline().decode('utf-8').rstrip()
+#         print(line)
+#         if line ==  "<ALIGNMENT_FINISHED>":
+#             aligned = True
 
-    return 1;
+#     return 1;
 
 
 
@@ -301,8 +318,6 @@ def UI_thread():
     if(not uiCreation):
         print("STARTED UI")
         uiCreation = True
-        app = QApplication(sys.argv)
-        win = Window()
         win.droneSearchText.setStyleSheet("background-color:yellow")
         win.show()
         app.exec()
@@ -312,18 +327,6 @@ def UI_thread():
 
 
 
-#editing from vi
-root_path = os.environ["HOME"]
-
-selected_device = []
-
-startup = False
-message = " "
-messageFlag = False
-uiCreation = False
-
-uiThread = threading.Thread(target =UI_thread)
-win
 
 if __name__ == "__main__":
    

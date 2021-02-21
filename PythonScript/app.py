@@ -312,6 +312,18 @@ def UI_thread():
 
 
 
+#editing from vi
+root_path = os.environ["HOME"]
+
+selected_device = []
+
+startup = False
+message = " "
+messageFlag = False
+uiCreation = False
+
+uiThread = threading.Thread(target =UI_thread)
+
 if __name__ == "__main__":
    
     
@@ -339,14 +351,3 @@ if __name__ == "__main__":
 
 
 
-#editing from vi
-root_path = os.environ["HOME"]
-
-selected_device = []
-
-startup = False
-message = " "
-messageFlag = False
-uiCreation = False
-
-uiThread = threading.Thread(target =UI_thread)

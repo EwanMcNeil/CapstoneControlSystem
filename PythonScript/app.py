@@ -335,9 +335,10 @@ if __name__ == "__main__":
         print("HELLO FROM DA LOOP")
         asyncio.ensure_future(connection.manager())
         #asyncio.ensure_future(UI_thread())
-
+        
         #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main(connection))
+        await UITask
         loop.run_forever()
     except KeyboardInterrupt:
         print()

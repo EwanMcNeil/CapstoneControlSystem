@@ -35,7 +35,9 @@ message = " "
 messageFlag = False
 uiCreation = False
 
-globalStage = 0;
+globalStage = 0
+stageUpdate = False
+
 
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -60,13 +62,15 @@ class Window(QMainWindow, Ui_MainWindow):
     #def run(self):
 
     def updateGUIloop(self):
-        global globalStage
-        started = True
+        global currentStage
+        global stageUpdate
         while(True):
-            if(globalStage == 1 and started):
+            if(globalStage == 1 and stageUpdate):
                 print("stage1")
                 self.droneSearchText.setStyleSheet("background-color:yellow")
-                started = False
+                self.progressBar_search.setMaximum(0)
+                self.progressBar_search.setMinimum(0)
+                stageUpdate = False
 
 
 

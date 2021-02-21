@@ -305,7 +305,7 @@ read_characteristic = "00001143-0000-1000-8000-00805f9b34fb"
 write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
-async def UI_thread():
+def UI_thread():
     global uiCreation
     if(not uiCreation):
         print("STARTED UI")
@@ -316,19 +316,18 @@ async def UI_thread():
         app.exec()
         #sys.exit(app.exec())
     else:
-        await asyncio.sleep(5.0, loop=loop)
+        print("else")
 
 
 
 if __name__ == "__main__":
    
-    
+    uiThread = threading.Thread(target =UI_thread)
+    uiThread.start()
     # Create the event loop.
     loop = asyncio.get_event_loop()
 
-   # UITask = asyncio.create_task(UI_thread())
-    asyncio.to_thread(UI_thread())
-  
+
 
     connection = Connection(
         loop, read_characteristic, write_characteristic
@@ -336,8 +335,6 @@ if __name__ == "__main__":
     try:
         print("HELLO FROM DA LOOP")
         asyncio.ensure_future(connection.manager())
-        #asyncio.ensure_future(UI_thread())
-        
         #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main(connection))
         loop.run_forever()

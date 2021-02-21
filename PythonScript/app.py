@@ -52,8 +52,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def findAndReplace(self):
         dialog = FindReplaceDialog(self)
         dialog.exec()
-    
-    def updateUI(self):
+
 
     def about(self):
         QMessageBox.about(

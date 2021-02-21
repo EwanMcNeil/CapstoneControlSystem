@@ -31,6 +31,7 @@ selected_device = []
 startup = False
 message = " "
 messageFlag = False
+uiCreation = False
 
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -305,10 +306,15 @@ write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
 async def UI_thread():
-    app = QApplication(sys.argv)
-    win = Window()
-    win.show()
-    sys.exit(app.exec())
+    global uiCreation
+    if(not uiCreation):
+        uiCreation = True
+        app = QApplication(sys.argv)
+        win = Window()
+        win.show()
+        sys.exit(app.exec())
+    else:
+        await asyncio.sleep(5.0, loop=loop)
 
 
 

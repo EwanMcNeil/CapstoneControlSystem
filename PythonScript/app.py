@@ -304,7 +304,7 @@ read_characteristic = "00001143-0000-1000-8000-00805f9b34fb"
 write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
-asyc def UI_thread():
+async def UI_thread():
     app = QApplication(sys.argv)
     win = Window()
     win.show()

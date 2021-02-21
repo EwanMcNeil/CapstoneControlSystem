@@ -57,7 +57,7 @@ class Window(QMainWindow, Ui_MainWindow):
         dialog = FindReplaceDialog(self)
         dialog.exec()
 
-    def run(self):
+    #def run(self):
 
     def updateGUIloop(self):
         global globalStage

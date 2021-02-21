@@ -304,11 +304,16 @@ read_characteristic = "00001143-0000-1000-8000-00805f9b34fb"
 write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
-
-if __name__ == "__main__":
+asyc def UI_thread():
     app = QApplication(sys.argv)
     win = Window()
     win.show()
+    sys.exit(app.exec())
+
+
+
+if __name__ == "__main__":
+   
     
     # Create the event loop.
     loop = asyncio.get_event_loop()
@@ -327,4 +332,4 @@ if __name__ == "__main__":
     finally:
         print("Disconnecting...")
         loop.run_until_complete(connection.cleanup())
-    sys.exit(app.exec())
+    

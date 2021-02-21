@@ -72,9 +72,6 @@ class FindReplaceDialog(QDialog):
 
 
 
-uiThread = threading.Thread(target =UI_thread)
-app = QApplication(sys.argv)
-win = Window()
 
 
 class Connection:
@@ -326,6 +323,11 @@ def UI_thread():
         print("else")
 
 
+
+
+uiThread = threading.Thread(target =UI_thread)
+app = QApplication(sys.argv)
+win = Window()
 
 
 if __name__ == "__main__":

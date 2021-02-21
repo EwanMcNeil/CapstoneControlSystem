@@ -43,7 +43,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.connectSignalsSlots()
         updateThread = threading.Thread(target =self.updateGUIloop)
-        updateThread.start
+        updateThread.start()
 
 
 
@@ -56,6 +56,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def findAndReplace(self):
         dialog = FindReplaceDialog(self)
         dialog.exec()
+
+    def run(self):
 
     def updateGUIloop(self):
         global globalStage

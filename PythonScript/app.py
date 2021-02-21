@@ -326,7 +326,8 @@ if __name__ == "__main__":
     # Create the event loop.
     loop = asyncio.get_event_loop()
 
-    UITask = asyncio.create_task(UI_thread())
+   # UITask = asyncio.create_task(UI_thread())
+    asyncio.run(UI_thread())
 
     connection = Connection(
         loop, read_characteristic, write_characteristic
@@ -338,7 +339,6 @@ if __name__ == "__main__":
         
         #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main(connection))
-        await UITask
         loop.run_forever()
     except KeyboardInterrupt:
         print()

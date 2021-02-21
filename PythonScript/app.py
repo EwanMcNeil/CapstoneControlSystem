@@ -310,6 +310,7 @@ write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
 def UI_thread():
+    global uiCreation
     if(not uiCreation):
         print("STARTED UI")
         app = QApplication(sys.argv)

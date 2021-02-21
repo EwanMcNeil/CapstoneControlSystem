@@ -282,7 +282,6 @@ async def main(connection: Connection):
     global messageFlag
     while True:
         if connection.client and connection.connected:
-        # YOUR APP CODE WOULD GO HERE.
             if(startup):
               if(messageFlag):
                     print("writing handler")
@@ -303,12 +302,14 @@ async def main(connection: Connection):
 #############
 read_characteristic = "00001143-0000-1000-8000-00805f9b34fb"
 write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
+exec 
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     win = Window()
     win.show()
-    sys.exit(app.exec())
+    
     # Create the event loop.
     loop = asyncio.get_event_loop()
 
@@ -326,4 +327,4 @@ if __name__ == "__main__":
     finally:
         print("Disconnecting...")
         loop.run_until_complete(connection.cleanup())
-
+    sys.exit(app.exec())

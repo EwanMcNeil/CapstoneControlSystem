@@ -61,9 +61,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def updateGUIloop(self):
         global globalStage
+        started = True
         while(True):
             print("looping")
-            if(globalStage == 1):
+            if(globalStage == 1 and started):
                 print("stage1")
                 self.droneSearchText.setStyleSheet("background-color:yellow")
 

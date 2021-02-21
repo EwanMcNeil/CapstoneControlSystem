@@ -308,6 +308,7 @@ exec
 async def UI_thread():
     global uiCreation
     if(not uiCreation):
+        print("STARTED UI")
         uiCreation = True
         app = QApplication(sys.argv)
         win = Window()
@@ -325,12 +326,16 @@ if __name__ == "__main__":
     # Create the event loop.
     loop = asyncio.get_event_loop()
 
+    UITask = asyncio.create_task(UI_thread())
+
     connection = Connection(
         loop, read_characteristic, write_characteristic
     )
     try:
+        print("HELLO FROM DA LOOP")
         asyncio.ensure_future(connection.manager())
-        asyncio.ensure_future(UI_thread())
+        #asyncio.ensure_future(UI_thread())
+
         #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main(connection))
         loop.run_forever()

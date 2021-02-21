@@ -42,7 +42,10 @@ class Window(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.connectSignalsSlots()
-        self.updateGUIloop()
+        updateThread = threading.Thread(target =updateGUIloop, args =self)
+        updateThread.start
+
+
 
     def connectSignalsSlots(self):
        print("ran")
@@ -61,7 +64,6 @@ class Window(QMainWindow, Ui_MainWindow):
             if(globalStage == 1):
                 print("stage1")
                 self.droneSearchText.setStyleSheet("background-color:yellow")
-                self.processEvents()
 
 
 

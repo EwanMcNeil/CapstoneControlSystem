@@ -172,6 +172,8 @@ class Connection:
         devices = await discover()
         response = -1
         global globalStage
+        global stageUpdate
+        stageUpdate = True
         globalStage = 1
         while(response == -1):
                 print("Searching for drone: ")

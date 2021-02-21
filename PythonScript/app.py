@@ -42,7 +42,7 @@ class Window(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.connectSignalsSlots()
-        updateThread = threading.Thread(target =updateGUIloop, args =self)
+        updateThread = threading.Thread(target =self.updateGUIloop)
         updateThread.start
 
 

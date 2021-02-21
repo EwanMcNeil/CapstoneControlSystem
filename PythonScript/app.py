@@ -312,7 +312,8 @@ async def UI_thread():
         app = QApplication(sys.argv)
         win = Window()
         win.show()
-        sys.exit(app.exec())
+        app.exec()
+        #sys.exit(app.exec())
     else:
         await asyncio.sleep(5.0, loop=loop)
 

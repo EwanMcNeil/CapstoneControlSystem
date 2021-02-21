@@ -52,6 +52,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def findAndReplace(self):
         dialog = FindReplaceDialog(self)
         dialog.exec()
+    
+    def updateUI(self):
 
     def about(self):
         QMessageBox.about(
@@ -150,6 +152,8 @@ class Connection:
 
         devices = await discover()
         response = -1
+        localWindow = Window()
+        localWindow.droneSearchText.setStyleSheet("background-color:yellow")
         while(response == -1):
                 print("Searching for drone: ")
                 for i, device in enumerate(devices):
@@ -316,7 +320,6 @@ def UI_thread():
         app = QApplication(sys.argv)
         win = Window()
         uiCreation = True
-        win.droneSearchText.setStyleSheet("background-color:yellow")
         win.show()
         app.exec()
         #sys.exit(app.exec())

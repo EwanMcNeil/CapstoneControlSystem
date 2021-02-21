@@ -302,7 +302,7 @@ def UI_thread():
         print("STARTED UI")
         uiCreation = True
         app = QApplication(sys.argv)
-       
+        win = Window()
         win.droneSearchText.setStyleSheet("background-color:yellow")
         win.show()
         app.exec()
@@ -323,7 +323,7 @@ messageFlag = False
 uiCreation = False
 
 uiThread = threading.Thread(target =UI_thread)
-win = Window()
+win
 
 if __name__ == "__main__":
    

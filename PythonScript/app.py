@@ -61,15 +61,32 @@ class Window(QMainWindow, Ui_MainWindow):
 
     #def run(self):
 
+
+
+    #########################
+    ###UPDATING UI
+    #########################
     def updateGUIloop(self):
         global currentStage
         global stageUpdate
         while(True):
             if(globalStage == 1 and stageUpdate):
                 print("stage1")
-                self.droneSearchText.setStyleSheet("background-color:yellow")
-                self.progressBar_search.setMaximum(0)
-                self.progressBar_search.setMinimum(0)
+                self.droneSearchText.setStyleSheet("background-color: yellow")
+                #self.progressBar_search.setMaximum(0)
+                #self.progressBar_search.setMinimum(0)
+                #self.show()
+                stageUpdate = False
+            if(globalStage == 2 and stageUpdate):
+                print("stage2")
+                self.droneSearchText.setStyleSheet("background-color: green")
+                self.centerTaskTextEdit.setStyleSheet("background-color: yellow")
+        
+                stageUpdate = False
+            if(globalStage == 3 and stageUpdate):
+                print("stage2")
+                self.centerTaskTextEdit.setStyleSheet("background-color: green")
+                self.AlignmentTaskTextEdit.setStyleSheet("background-color: yellow")
                 stageUpdate = False
 
 
@@ -186,6 +203,8 @@ class Connection:
                    devices = await discover()
                 
         print(f"Connecting to {devices[response].name}")
+        stageUpdate = True
+        globalStage = 2
         self.connected_device = devices[response]
         self.client = BleakClient(devices[response].address, loop=self.loop)
 
@@ -225,9 +244,11 @@ class Connection:
         # once achieved send message to turn off lights 	
         if(droneMessage == 1):
             print("recieved 1")
-            #check = waitAlign()
+            check = waitAlign()
             if(check == 1):
                 message = "ALIGNED_DRONE"
+                stageUpdate = True
+                globalStage = 3
                 messageFlag = True
            
                   
@@ -239,8 +260,8 @@ class Connection:
 #############
 
 # #Setting up the usb serial connections to the microcontrollers
-#rotation = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
-#rotation.flush()
+rotation = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
+rotation.flush()
 
 # locking = serial.Serial('/dev/ttyACM1', 9600, timeout = 1)
 # locking.flush()
@@ -251,19 +272,19 @@ class Connection:
 #this will tell all the microcontrollers at different stages what to do
 
 
-# def waitAlign():
-#     #telling microcontroller to start alignment checking 
-#     rotation.write(b"<ALIGNMENT_START>")
-#     aligned = False
+def waitAlign():
+    #telling microcontroller to start alignment checking 
+    rotation.write(b"<ALIGNMENT_START>")
+    aligned = False
 
-#     #waiting for postive aligment to procede to next step
-#     while not aligned:
-#         line = rotation.readline().decode('utf-8').rstrip()
-#         print(line)
-#         if line ==  "<ALIGNMENT_FINISHED>":
-#             aligned = True
+    #waiting for postive aligment to procede to next step
+    while not aligned:
+        line = rotation.readline().decode('utf-8').rstrip()
+        print(line)
+        if line ==  "<ALIGNMENT_FINISHED>":
+            aligned = True
 
-#     return 1;
+    return 1;
 
 
 

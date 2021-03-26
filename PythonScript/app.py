@@ -142,17 +142,14 @@ class Connection:
             message = "LAND_DRONE"
             messageFlag = True
 
-           
-
 	    #one indicates the drone has landed 
         # After which we check for alignment 
         # once achieved send message to turn off lights 	
         if(droneMessage == 1):
-            print("recieved 1")
-            check = waitAlign()
-            if(check == 1):
-                message = "ALIGNED_DRONE"
-                messageFlag = True
+            if(waitLanded()):	
+                if(waitAlign()):
+                    message = "ALIGNED_DRONE"
+                    messageFlag = True
            
                   
 
@@ -187,8 +184,19 @@ def waitAlign():
         if line ==  "<ALIGNMENT_FINISHED>":
             aligned = True
 
-    return 1;
+    return True;
 
+def waitLanded():
+	#tell platfrom to check for landing
+	rotation.write(b"<CHECK_LANDED>")
+	landed = False
+
+	while not landed:
+		line = rotation.readline().decode('utf-8').rstrip()
+		print(line)
+		if line == "DRONE_LANDED":
+			landed = True
+	return True;
 
 
 
@@ -236,7 +244,6 @@ async def main(connection: Connection):
     global messageFlag
     while True:
         if connection.client and connection.connected:
-        # YOUR APP CODE WOULD GO HERE.
             if(startup):
               if(messageFlag):
                     print("writing handler")

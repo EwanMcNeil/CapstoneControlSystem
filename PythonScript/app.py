@@ -11,14 +11,6 @@ import serial
 import time 
 
 
-from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QMessageBox
-)
-from PyQt5.uic import loadUi
-
-from SwapDockUI import Ui_MainWindow
-
-
 
 from aioconsole import ainput
 from bleak import BleakClient, discover
@@ -33,83 +25,6 @@ selected_device = []
 startup = False
 message = " "
 messageFlag = False
-uiCreation = False
-
-globalStage = 0
-stageUpdate = False
-
-
-class Window(QMainWindow, Ui_MainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.connectSignalsSlots()
-        updateThread = threading.Thread(target =self.updateGUIloop)
-        updateThread.start()
-
-
-
-    def connectSignalsSlots(self):
-       print("ran")
-      # self.action_Exit.triggered.connect(self.close)
-       #self.action_Find_Replace.triggered.connect(self.findAndReplace)
-      # self.action_About.triggered.connect(self.about)
-
-    def findAndReplace(self):
-        dialog = FindReplaceDialog(self)
-        dialog.exec()
-
-    #def run(self):
-
-
-
-    #########################
-    ###UPDATING UI
-    #########################
-    def updateGUIloop(self):
-        global currentStage
-        global stageUpdate
-        while(True):
-            if(globalStage == 1 and stageUpdate):
-                print("stage1")
-                self.droneSearchText.setStyleSheet("background-color: yellow")
-                #self.progressBar_search.setMaximum(0)
-                #self.progressBar_search.setMinimum(0)
-                #self.show()
-                stageUpdate = False
-            if(globalStage == 2 and stageUpdate):
-                print("stage2")
-                self.droneSearchText.setStyleSheet("background-color: green")
-                self.centerTaskTextEdit.setStyleSheet("background-color: yellow")
-        
-                stageUpdate = False
-            if(globalStage == 3 and stageUpdate):
-                print("stage2")
-                self.centerTaskTextEdit.setStyleSheet("background-color: green")
-                self.AlignmentTaskTextEdit.setStyleSheet("background-color: yellow")
-                stageUpdate = False
-
-
-
-    def about(self):
-        QMessageBox.about(
-            self,
-            "About Sample Editor",
-            "<p>A sample text editor app built with:</p>"
-            "<p>- PyQt</p>"
-            "<p>- Qt Designer</p>"
-            "<p>- Python</p>",
-        )
-
-
-
-class FindReplaceDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        loadUi("ui/find_replace.ui", self)
-
-
-
 
 
 class Connection:
@@ -181,11 +96,6 @@ class Connection:
     async def select_device(self):
         print("Bluetooh LE hardware warming up...")
         await asyncio.sleep(2.0, loop=loop) # Wait for BLE to initialize.
-
-
-
-
-
         devices = await discover()
         response = -1
         global globalStage
@@ -331,6 +241,14 @@ async def main(connection: Connection):
     global startup
     global message
     global messageFlag
+
+
+    ##initalizing the stage for the UI
+    f = open("currentStage.txt", "w")
+    f.write("0")
+    f.close()
+
+
     while True:
         if connection.client and connection.connected:
             if(startup):
@@ -355,40 +273,15 @@ read_characteristic = "00001143-0000-1000-8000-00805f9b34fb"
 write_characteristic = "00001142-0000-1000-8000-00805f9b34fb"
 exec 
 
-def UI_thread():
-    global uiCreation
-    if(not uiCreation):
-        print("STARTED UI")
-        app = QApplication(sys.argv)
-        win = Window()
-        uiCreation = True
-        win.show()
-        app.exec()
-        #sys.exit(app.exec())
-    else:
-        print("else")
-
-
-
-
-uiThread = threading.Thread(target =UI_thread)
-
-
 
 if __name__ == "__main__":
-   
-    
-    uiThread.start()
+
     # Create the event loop.
     loop = asyncio.get_event_loop()
-
-
-
     connection = Connection(
         loop, read_characteristic, write_characteristic
     )
     try:
-        print("HELLO FROM DA LOOP")
         asyncio.ensure_future(connection.manager())
         #asyncio.ensure_future(user_console_manager(connection))
         asyncio.ensure_future(main(connection))

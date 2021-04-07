@@ -10,8 +10,6 @@ from typing import Callable, Any
 import serial
 import time 
 
-
-
 from aioconsole import ainput
 from bleak import BleakClient, discover
 
@@ -153,13 +151,17 @@ class Connection:
         # After which we check for alignment 
         # once achieved send message to turn off lights 	
         if(droneMessage == 1):
-            print("recieved 1")
-            check = waitAlign()
-            if(check == 1):
-                message = "ALIGNED_DRONE"
-                stageUpdate = True
-                globalStage = 3
-                messageFlag = True
+            print("Drone has said it has landed")
+            #ensuring drone on platform
+            checklanded = checkDroneLanded()
+            #start the swapping process
+            print("Drone landing confirmed starting alignment")
+            aligned = waitAlign()
+            print("moving to swaping")
+            checkSwap = waitSwap()
+            print("swap completed!")
+            #TODO tell drone to fly away
+            #start searching for new drones
            
                   
 
@@ -170,16 +172,70 @@ class Connection:
 #############
 
 # #Setting up the usb serial connections to the microcontrollers
-rotation = serial.Serial('/dev/ttyACM0', 9600, timeout = 1)
-rotation.flush()
+USBZERO = serial.Serial('/dev/ttyUSB0', 9600, timeout = 1)
+USBZERO.flush()
 
-# locking = serial.Serial('/dev/ttyACM1', 9600, timeout = 1)
-# locking.flush()
 
-# arm = serial.Serial('/dev/ttyACM2', 9600, timeout = 1)
-# arm.flush()
+USBONE = serial.Serial('/dev/ttyUSB1', 9600, timeout = 1)
+USBONE.flush()
+
+
+zeroIdentified = False
+oneIdentified = False
+global rotation 
+global arm
+
+
+
+#waiting for postive aligment to procede to next step
+while not zeroIdentified:
+    USBZERO.write(b"<IDENTIFY_PORT>")
+    print("identifiy zero")
+    line = USBZERO.readline().decode('utf-8').rstrip()
+    print(line)
+    if line ==  "<ROTATION>":
+        print("rotation arduino found")
+        rotation = USBZERO
+        zeroIdentified = True
+    if line ==  "<ARM>":
+        print("rotation arduino found")
+        arm = USBZERO
+        zeroIdentified = True
+
+
+
+while not oneIdentified:
+    USBONE.write(b"<IDENTIFY_PORT>")
+    print("id one")
+    line = USBONE.readline().decode('utf-8').rstrip()
+    print(line)
+    if line ==  "<ROTATION>":
+        print("rotation arduino found")
+        rotation = USBONE
+        oneIdentified = True
+    if line ==  "<ARM>":
+        print("rotation arduino found")
+        arm = USBONE
+        oneIdentified = True
+
+
+
 
 #this will tell all the microcontrollers at different stages what to do
+
+def checkDroneLanded():
+     #telling microcontroller to start alignment checking 
+    rotation.write(b"<CHECK_LANDED>")
+    landed = False
+
+    #waiting for postive aligment to procede to next step
+    while not landed:
+        line = rotation.readline().decode('utf-8').rstrip()
+        print(line)
+        if line ==  "<DRONE_LANDED>":
+            landed = True
+
+    return 1;
 
 
 def waitAlign():
@@ -191,11 +247,27 @@ def waitAlign():
     while not aligned:
         line = rotation.readline().decode('utf-8').rstrip()
         print(line)
-        if line ==  "<ALIGNMENT_FINISHED>":
+        if line ==  "ALIGNMENT_FINISHED":
             aligned = True
 
     return 1;
 
+
+def waitSwap():
+
+    print("starting swap function")
+      #telling microcontroller to start alignment checking 
+    arm.write(b"<SWAP_START>")
+    swapped = False
+
+    #waiting for postive aligment to procede to next step
+    while not swapped:
+        line = arm.readline().decode('utf-8').rstrip()
+        print(line)
+        if line ==  "<SWAPDONE>":
+            swapped = True
+
+    return 1;
 
 
 
